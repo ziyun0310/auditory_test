@@ -1,0 +1,1283 @@
+PennController.ResetPrefix(null);
+// 在 Header 中设置全局样式
+Header(
+    newFunction(() => {
+        const style = document.createElement("style");
+        style.innerHTML = `
+            /* 全局样式覆盖 */
+            body {
+                margin: 0;
+                padding: 0;
+                font-size: 1.5vw;  /* 全局字体大小相对于屏幕宽度 */
+            }
+            
+            /* 为文字设置自适应大小和布局 */
+            .PennController-Text {
+                font-size: 1.5vw; /* 文字大小根据屏幕宽度调整 */
+                width: 100%; /* 占满屏幕宽度 */
+                margin: 0; /* 去除默认边距 */
+                padding: 0 0px; /* 添加左右边距，避免文字贴屏幕边缘 */
+                line-height: 1.5em; /* 增加行间距 */
+                text-align: left; /* 左对齐文字内容 */
+            }
+
+            /* 为填空框设置自适应大小 */
+            input[type="text"], textarea {
+                font-size: 1.5vw; /* 输入框内文字大小自适应 */
+                width: calc(100% - 40px); /* 填空框宽度减去左右边距 */
+                padding: 10px; /* 内部边距 */
+                margin: 10px 20px; /* 外部边距 */
+                box-sizing: border-box; /* 包括边框在宽度计算内 */
+            }
+
+            /* 为量表题（Radio）设置自适应大小 */
+            input[type="radio"] + label {
+                font-size: 1.5vw; /* 量表标签文字大小 */
+                margin-right: 15px; /* 调整选项间距 */
+                display: inline-block; /* 选项水平排列 */
+            }
+
+            input[type="radio"] {
+                transform: scale(1.5); /* 调整单选按钮大小 */
+                margin-right: 16px; /* 调整按钮文字间距 */
+            }
+
+            /* 为按钮设置自适应大小 */
+            button, input[type="button"] {
+                font-size: 1vw; /* 按钮文字大小自适应 */
+                padding: 10px 20px; /* 按钮内部边距 */
+                margin: 10px 20px; /* 按钮外部边距 */
+                width: auto; /* 按钮宽度根据内容调整 */
+            }
+
+            /* 为下拉框（Dropdown/Select）设置自适应大小 */
+            select {
+                font-size: 1.5vw; /* 下拉框文字大小自适应 */
+                padding: 10px; /* 内部边距 */
+                margin: 10px 20px; /* 外部边距 */
+                width: calc(100% - 40px); /* 下拉框宽度 */
+                box-sizing: border-box; /* 包括边框在宽度计算内 */
+            }
+        `;
+        document.head.appendChild(style);
+    }).call()
+);
+// 定义一个正则表达式来匹配中文字符
+const chineseRegex = /^[\u4e00-\u9fa5]+$/
+;
+newTrial("00",
+    newText("prompt00",
+        "你好，欢迎参加我们的研究。在这个实验中，你需要先阅读一些汉语句子，阅读完后点击音频，你将听到一句句子。你需要根据指令对<span style='color: red; font-weight: bold;'>听到的</span>句子做出判断。<br>"+
+        "请先填写个人信息，你填写的所有内容将严格保密。"
+    )
+    .print().settings.css("margin-bottom","10px"), // 将文本内容显示给参与者
+    
+    // 姓名
+    newText("info1", "姓名：").print(),
+    newTextInput("name").log().print().settings.css("margin-bottom","10px"),
+    
+    // 年龄
+    newText("info2", "年龄：").print(),
+    newTextInput("age").log().print().settings.css("margin-bottom","10px"),
+    
+    // 18周岁之前居住超过半年的城市
+    newText("info3", "请列出你在18周岁之前居住超过半年的城市：").print(),
+    newTextInput("cities").log().print().settings.css("margin-bottom","10px"),
+    
+    // 日常与家人沟通中主要使用的语言或方言
+    newText("info4", "列出你日常与家人的沟通中，主要使用的语言或方言：").print(),
+    newTextInput("language").log().print().settings.css("margin-bottom","10px"),
+    
+    // 性别
+    newText("info5", "性别：").print(),
+    newDropDown("gender", "选择你的性别")
+        .add("男", "女")
+        .log()
+        .print()
+        .settings.css("margin-bottom","10px"),
+    
+    // 当前学历
+    newText("info6", "你当前的学历是（含在读）：").print(),
+    newDropDown("education", "选择你的学历")
+        .add("初中及以下", "高中", "大学专科", "大学本科", "硕士研究生", "博士研究生")
+        .log()
+        .print()
+        .settings.css("margin-bottom","30px"),
+        
+    newButton("next", "下一步")
+    .print()
+    .wait(
+        getTextInput("name").test.text(chineseRegex).failure(
+            newText("error", "请用中文输入姓名。")
+            .color("red")
+            .print()
+        ).and(
+            getTextInput("age").testNot.text("").failure(
+            newText("error", "请输入你的年龄。")
+            .color("red")
+            .print()
+        ).and(
+            getTextInput("cities").test.text(chineseRegex).failure(
+            newText("error", "请用中文和中文标点输入你居住的城市。")
+            .color("red")
+            .print()
+        ).and(
+            getTextInput("language").test.text(chineseRegex).failure(
+            newText("error", "请用中文和中文标点输入你使用的语言或方言。")
+            .color("red")
+            .print()
+        ).and(
+            getDropDown("gender").test.selected().failure(
+            newText("error", "请选择你的性别。")
+            .color("red")
+            .print()
+        ).and(
+            getDropDown("education").test.selected().failure(
+            newText("error", "请选择你的学历。")
+            .color("red")
+            .print()
+        )
+    )
+    )
+    )
+    )
+    )
+    )
+);
+newTrial("01",
+    newText("prompt01",
+        "在接下来的实验中，你需要阅读一些句子。其中，最后一句句子是空缺的。<br>" +
+        "阅读完成后，点击“播放音频”按钮，你将听到空缺句子的内容。<br>" +
+        "请你根据直觉，判断你所<span style='color: red; font-weight: bold;'>听到的</span>句子在语境中自然与否。<br>" +
+        "听完每个句子后，请用鼠标在1-7的分数范围内选择：<br>" +
+        "答案没有对错，请不要多想，凭第一直觉作答。<br>" +
+        "如果没有听清句子，你可以在第一次播放完毕后点击“重新播放”。<br>" +
+        "重新播放的机会只有一次，请根据需要使用。<br>"
+    )
+    .print(), // 将文本内容显示给参与者
+    
+    newButton("nextButton", "下一页")
+        .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+        .print()
+        .wait() // 等待按钮点击
+);
+newTrial("02",
+    newText("prompt02",
+        "为了保证实验效果，请保持专注，<b>在安静环境下一口气</b>完成。尽量<b>一次完成判断</b>，避免重听。<br>"+
+        "正式实验开始前，将会有四组练习。<br>" +
+        "整个实验共有16个句子，预计完成时间约为10分钟。<br>" +
+        "理解指令后，请点击下方按钮进入实验。"
+    )
+    .print(), // 将文本内容显示给参与者
+    
+    newButton("nextButton", "进入实验")
+        .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+        .print()
+        .wait() // 等待按钮点击
+);
+newTrial("p1",
+      newText("instruction", "练习一")
+        .settings.css("margin-top", "30px")
+        .settings.css("margin-bottom", "30px")
+        .print()
+    ,
+      newText("environment", 
+         "麦琪养了两只小猫，朋友来做客时看到小猫在家里到处跑。朋友问：你家里有什么地方小猫不能去吗？<br>"+
+         "麦琪回答：________。"
+        )
+        .settings.css("margin-top", "30px")
+        .settings.css("margin-bottom", "30px")
+        .print()
+    ,
+      newButton("playButton", "播放音频")
+        .settings.css("margin-top", "10px")
+        .once()
+        .callback(getAudio("sound").play())
+        .print()
+    ,
+      newAudio("sound", "p1.m4a") // 替换链接
+        .remove()
+        .wait() // 等待音频播放完毕
+    ,
+    newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+        .settings.css("margin-top", "30px")
+        .print()
+    ,
+   newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+    .settings.labelsPosition("top")
+    .settings.css("margin-top", "30px")
+    .settings.css("margin-bottom","30px")
+    .print()
+    .log()
+    ,
+     newButton("playButton", "重新播放")
+        .settings.css("margin-top", "10px")
+        .once()
+        .callback(getAudio("sound").play())
+        .print()
+    ,
+    newButton("nextButton", "下一题")
+        .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+        .print()
+        .wait(
+            getScale("rating").test.selected().failure(
+                newText("error", "请对句子做出判断！")
+                    .color("red")
+                    .settings.css("margin-top", "10px")
+                    .print()
+            )
+        )
+        .log("rating", getScale("rating").test.selected())
+);
+newTrial("p2",
+    newText("instruction", "练习二")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment",
+         "阳阳打完篮球比赛回家，妈妈问他结果怎么样。他问：你想先听好消息还是坏消息？<br>"+
+         "妈妈回答：________。"
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "p2.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("p3",
+    newText("instruction", "练习三")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+         "北京冬天下雪了，明明出门堆雪人玩。泰国的网友问他：下雪的时候要打伞吗？<br>"+
+         "明明回答：________。"
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "p3.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("p4",
+    newText("instruction", "练习四")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "小林悄悄把餐桌上的十条小鱼都吃光了。妈妈发现鱼不见了，问她：鱼被你吃了？<br>"+
+            "小林回答：________。"
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "p4.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("03",
+    newText("prompt03",
+       "您已完成练习阶段，接下来进入正式实验。<br>" +
+        "让我们一起回顾一下：<br>" +
+        "1. 你会阅读一些句子（最后一句是空缺的），完成阅读后点击“播放音频”按钮；<br>"+
+        "2. 你会听到一个句子，请在听完后判断<b>听到的</b>句子有多自然；<br>" +
+        "3. 判断完后请在1-7的选择范围内作出选择；<br>" +
+        "4. 语音播放完毕后，你有一次点击按钮重听的机会；<br>" +
+        "5. 选择完后，请点击“下一题”，进入下一个句子的判断；<br>" +
+        "6. 实验过程中如需要休息，请在听完一个句子并做出选择之后休息，尽量避免在句子中间停顿。<br>" +
+        "接下来，请点击下方按钮进入正式实验："
+    )
+    .print(), // 将文本内容显示给参与者
+    
+    newButton("nextButton", "进入实验")
+        .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+        .print()
+        .wait() // 等待按钮点击
+);
+newTrial("t1",
+    newText("instruction", "第一题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "下课后，大家离开音乐教室。莎莎看到桌子上有一本书，问：谁带书了？小晴说：星星带书了。<br>"+                
+            "班长回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "1.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t2",
+    newText("instruction", "第二题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "学校食堂最近开始卖小火锅了，朱同学说她中午要去吃。下午大家问她：小火锅好吃吗？<br>"+                
+            "朱同学回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "2.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t3",
+    newText("instruction", "第三题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "篮球比赛中途突然下起小雨。大明放在地上的书包里有很多重要的文件不能淋湿，他问大家：谁带伞了？李强说：我记得队长好像带了。<br>"+                
+            "队长回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "3.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t4",
+    newText("instruction", "第四题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "小刚过生日的时候收到很多礼物，他最喜欢一个蜘蛛侠的乐高。他问妈妈：这是谁送的礼物？<br>"+                
+            "妈妈回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "4.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t5",
+    newText("instruction", "第五题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "情人节冬冬忘记给女朋友准备礼物了，怕她生气想临时借个礼物去送。他问室友：谁收到礼物了？<br>"+                
+            "室友回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "5.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t6",
+    newText("instruction", "第六题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "听说明天刘德华要来学校开演唱会，四个朋友约好一起去看。第二天笑笑说有事不去了。果果问：为什么不去了？<br>"+                
+            "笑笑回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "6.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t7",
+    newText("instruction", "第七题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "小陈下周要去华为公司谈合作，想先请在那里工作的朋友们吃个饭。就问妻子：谁在华为工作？<br>"+                
+            "妻子回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "7.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t8",
+    newText("instruction", "第八题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "校排球队获奖了。小华听说班上有一个同学参加了比赛，问同学小夏：谁参加了排球比赛？<br>"+                
+            "小夏回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "8.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t9",
+    newText("instruction", "第九题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "圣诞节快到了，两个好朋友一起出去买礼物。小雨问：这条围巾好看吗？<br>"+                
+            "波波回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "9.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t10",
+    newText("instruction", "第十题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "中秋节了，小金想找在广州上大学的同学们一起吃个饭。就问小明：谁在广州上大学？<br>"+                
+            "小明回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "10.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t11",
+    newText("instruction", "第十一题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "彤彤上大学想学英语专业，爸妈不同意，彤彤问：为什么不能学英语专业？<br>"+                
+            "爸爸回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "11.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t12",
+    newText("instruction", "第十二题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "妹妹考完英语考试回家，心情看起来很好。姐姐问：英语考试很简单吗？<br>"+                
+            "妹妹回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "12.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t13",
+    newText("instruction", "第十三题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "丽丽上班看到桌上有一些北京的特产。婷婷猜是上周去北京出差的同事给的。丽丽问：谁去北京出过差？<br>"+                
+            "婷婷回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "13.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t14",
+    newText("instruction", "第十四题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "大家坐在一起讨论毕业旅行去哪里玩，琳琳提议去欧洲玩，亮亮不同意。琳琳问：你是没钱还是没有时间？<br>"+                
+            "亮亮回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "14.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t15",
+    newText("instruction", "第十五题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "贝贝上午，下午各喝了一杯咖啡，晚上还想再喝一杯。朋友问：你不怕睡不着吗？<br>"+                
+            "贝贝回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "15.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+newTrial("t16",
+    newText("instruction", "第十六题")
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newText("environment", 
+            "元旦节放三天假，很多同学会回家。小柳想找个室友随便帮她带点地方特产送人，问室友们：谁要回家？<br>"+                
+            "室友回答：________。"  
+        )
+      .settings.css("margin-top", "30px")
+      .settings.css("margin-bottom", "30px")
+      .print()
+  ,
+    newButton("playButton", "播放音频")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+    newAudio("sound", "16.m4a") // 替换链接
+      .remove()
+      .wait() // 等待音频播放完毕
+  ,
+  newText("rate", "请为刚刚听到的句子打分：1为非常不自然，7为非常自然")
+      .settings.css("margin-top", "30px")
+      .print()
+  ,
+ newScale("rating", "1", "2", "3", "4", "5", "6", "7")
+  .settings.labelsPosition("top")
+  .settings.css("margin-top", "30px")
+  .settings.css("margin-bottom","30px")
+  .print()
+  .log()
+  ,
+   newButton("playButton", "重新播放")
+      .settings.css("margin-top", "10px")
+      .once()
+      .callback(getAudio("sound").play())
+      .print()
+  ,
+  newButton("nextButton", "下一题")
+      .settings.css("margin-top", "30px") // 调整按钮与量表之间的间距
+      .print()
+      .wait(
+          getScale("rating").test.selected().failure(
+              newText("error", "请对句子做出判断！")
+                  .color("red")
+                  .settings.css("margin-top", "10px")
+                  .print()
+          )
+      )
+      .log("rating", getScale("rating").test.selected())
+);
+PennController("final",
+    newButton("finish", "提交")
+        .print()
+        .wait()
+        .log()
+);
